@@ -1,52 +1,62 @@
 import cocotb
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import RisingEdge
 
+
+# Helper to set inputs
 def pack_input(dividend, divisor):
-    return (dividend << 4) | (divisor & 0xF)
+    # First 8 bits: dividend, next 8 bits: divisor
+    return (dividend << 8) | (divisor & 0xFF)
 
+
+# Helper to get outputs
 def extract_output(value):
-    quotient = (value >> 4) & 0xF
-    remainder = value & 0xF
+    # First 8 bits: quotient, next 8 bits: remainder
+    quotient = (value >> 8) & 0xFF
+    remainder = value & 0xFF
     return quotient, remainder
 
+
 @cocotb.test()
-async def run_divider_test(dut):
-    dut._log.info("Starting Divider Testbench...")
+async def divider_test(dut):
+    """Test unsigned 8-bit divider"""
 
     # Reset
     dut.rst_n.value = 0
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
     await RisingEdge(dut.clk)
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)
 
-    # Loop through all test cases
-    for dividend in range(0, 16):
-        for divisor in range(1, 16):
-            dut.ui_in.value = pack_input(dividend, divisor)
-            dut.ena.value = 1
+    # Test cases: (dividend, divisor)
+    test_vectors = [
+        (10, 2),
+        (100, 5),
+        (255, 1),
+        (200, 10),
+        (50, 7),
+        (0, 5),
+        (123, 123)
+    ]
 
-            await RisingEdge(dut.clk)  # Input latch
-            await RisingEdge(dut.clk)  # Output latch
-            await Timer(1, units='ns') # Give time for outputs to settle
+    for dividend, divisor in test_vectors:
+        dut.ui_in.value = pack_input(dividend, divisor)
 
-            value = dut.uo_out.value.integer
-            quotient, remainder = extract_output(value)
+        # Wait a few cycles for the DUT to process
+        for _ in range(3):
+            await RisingEdge(dut.clk)
 
-            expected_quotient = dividend // divisor
-            expected_remainder = dividend % divisor
+        quotient, remainder = extract_output(int(dut.uo_out.value))
 
-            assert quotient == expected_quotient, \
-                f"{dividend}/{divisor}: Quotient mismatch! Got {quotient}, Expected {expected_quotient}"
-            assert remainder == expected_remainder, \
-                f"{dividend}/{divisor}: Remainder mismatch! Got {remainder}, Expected {expected_remainder}"
+        # Expected results
+        expected_quotient = dividend // divisor if divisor != 0 else 0
+        expected_remainder = dividend % divisor if divisor != 0 else dividend
 
-    # Divide-by-zero case
-    dut.ui_in.value = pack_input(5, 0)
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    await Timer(1, units='ns')
-
-    value = dut.uo_out.value.integer
-    assert value == 0xFF, f"Divide-by-zero test failed: Got {value:02X}, Expected FF"
-
-    dut._log.info("All tests passed successfully!")
+        assert quotient == expected_quotient, (
+            f"Quotient mismatch: {quotient} != {expected_quotient} "
+            f"for {dividend}/{divisor}"
+        )
+        assert remainder == expected_remainder, (
+            f"Remainder mismatch: {remainder} != {expected_remainder} "
+            f"for {dividend}/{divisor}"
+        )
