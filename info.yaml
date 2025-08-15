@@ -1,56 +1,45 @@
 # Tiny Tapeout project information
 project:
-  title:        ""      # Project title
-  author:       ""      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
-  language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
-
-  # How many tiles your design occupies? A single tile is about 167x108 uM.
-  tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
-
-  # Your top module name must start with "tt_um_". Make it unique by including your github username:
-  top_module:  "tt_um_example"
-
-  # List your project's source files here.
-  # Source files must be in ./src and you must list each source file separately, one per line.
-  # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
+  title:        "8-bit Unsigned Divider"
+  author:       "Your Name"
+  discord:      "yourdiscord#1234"
+  description:  "Performs 8-bit Unsigned Division with Quotient & Remainder output"
+  language:     "Verilog"
+  clock_hz:     0
+  tiles:        "1x1"
+  top_module:   "tt_um_unsigned_divider"
   source_files:
     - "project.v"
 
-# The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
-# This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
-  # Inputs
-  ui[0]: ""
-  ui[1]: ""
-  ui[2]: ""
-  ui[3]: ""
-  ui[4]: ""
-  ui[5]: ""
-  ui[6]: ""
-  ui[7]: ""
+  # Inputs (Dividend)
+  ui[0]: "Dividend[0]"
+  ui[1]: "Dividend[1]"
+  ui[2]: "Dividend[2]"
+  ui[3]: "Dividend[3]"
+  ui[4]: "Dividend[4]"
+  ui[5]: "Dividend[5]"
+  ui[6]: "Dividend[6]"
+  ui[7]: "Dividend[7]"
 
-  # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: ""
-  uo[4]: ""
-  uo[5]: ""
-  uo[6]: ""
-  uo[7]: ""
+  # Outputs (Quotient)
+  uo[0]: "Quotient[0]"
+  uo[1]: "Quotient[1]"
+  uo[2]: "Quotient[2]"
+  uo[3]: "Quotient[3]"
+  uo[4]: "Quotient[4]"
+  uo[5]: "Quotient[5]"
+  uo[6]: "Quotient[6]"
+  uo[7]: "Quotient[7]"
 
-  # Bidirectional pins
-  uio[0]: ""
-  uio[1]: ""
-  uio[2]: ""
-  uio[3]: ""
-  uio[4]: ""
-  uio[5]: ""
-  uio[6]: ""
-  uio[7]: ""
+  # Bidirectional pins (Divisor Input & Remainder Output)
+  uio[0]: "Divisor[0]/Remainder[0]"
+  uio[1]: "Divisor[1]/Remainder[1]"
+  uio[2]: "Divisor[2]/Remainder[2]"
+  uio[3]: "Divisor[3]/Remainder[3]"
+  uio[4]: "Divisor[4]/Remainder[4]"
+  uio[5]: "Divisor[5]/Remainder[5]"
+  uio[6]: "Divisor[6]/Remainder[6]"
+  uio[7]: "Divisor[7]/Remainder[7]"
 
-# Do not change!
 yaml_version: 6
