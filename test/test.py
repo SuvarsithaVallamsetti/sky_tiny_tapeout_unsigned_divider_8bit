@@ -1,40 +1,52 @@
-# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
-# SPDX-License-Identifier: Apache-2.0
-
 import cocotb
-from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import RisingEdge, Timer
 
+def pack_input(dividend, divisor):
+    return (dividend << 4) | (divisor & 0xF)
+
+def extract_output(value):
+    quotient = (value >> 4) & 0xF
+    remainder = value & 0xF
+    return quotient, remainder
 
 @cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
-
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
-    cocotb.start_soon(clock.start())
+async def run_divider_test(dut):
+    dut._log.info("Starting Divider Testbench...")
 
     # Reset
-    dut._log.info("Reset")
-    dut.ena.value = 1
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
+    await RisingEdge(dut.clk)
     dut.rst_n.value = 1
+    await RisingEdge(dut.clk)
 
-    dut._log.info("Test project behavior")
+    # Loop through all test cases
+    for dividend in range(0, 16):
+        for divisor in range(1, 16):
+            dut.ui_in.value = pack_input(dividend, divisor)
+            dut.ena.value = 1
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+            await RisingEdge(dut.clk)  # Input latch
+            await RisingEdge(dut.clk)  # Output latch
+            await Timer(1, units='ns') # Give time for outputs to settle
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+            value = dut.uo_out.value.integer
+            quotient, remainder = extract_output(value)
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
+            expected_quotient = dividend // divisor
+            expected_remainder = dividend % divisor
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+            assert quotient == expected_quotient, \
+                f"{dividend}/{divisor}: Quotient mismatch! Got {quotient}, Expected {expected_quotient}"
+            assert remainder == expected_remainder, \
+                f"{dividend}/{divisor}: Remainder mismatch! Got {remainder}, Expected {expected_remainder}"
+
+    # Divide-by-zero case
+    dut.ui_in.value = pack_input(5, 0)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await Timer(1, units='ns')
+
+    value = dut.uo_out.value.integer
+    assert value == 0xFF, f"Divide-by-zero test failed: Got {value:02X}, Expected FF"
+
+    dut._log.info("All tests passed successfully!")
