@@ -16,8 +16,8 @@ jobs:
       - name: Build docs
         uses: TinyTapeout/tt-gds-action/docs@ttihp25b
 
-      - name: Upload Docs artifact   # <-- added this step
-        uses: actions/upload-pages-artifact@v2
+      - name: Upload Docs artifact
+        uses: actions/upload-artifact@v4   # ✅ updated to v4
         with:
-          name: github-pages-docs    # <-- renamed to avoid conflict
+          name: github-pages-docs
           path: ./docs/_site
